@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"log"
 	"os"
 	"os/exec"
 )
@@ -12,11 +14,19 @@ func main() {
 	args := os.Args[4:len(os.Args)]
 
 	cmd := exec.Command(command, args...)
+
+	stderrPipe, err := cmd.StderrPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stderrPipe.Close()
+	go func() {
+		io.Copy(os.Stderr, stderrPipe)
+	}()
+
 	output, err := cmd.Output()
 	if err != nil {
-		fmt.Printf("Err: %v", err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
-
-	fmt.Println(string(output))
+	fmt.Fprint(os.Stdout, string(output))
 }
