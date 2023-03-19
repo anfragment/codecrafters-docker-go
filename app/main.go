@@ -26,7 +26,11 @@ func main() {
 
 	output, err := cmd.Output()
 	if err != nil {
-		log.Fatal(err)
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			os.Exit(exitErr.ExitCode())
+		} else {
+			log.Fatal(err)
+		}
 	}
 	fmt.Fprint(os.Stdout, string(output))
 }
